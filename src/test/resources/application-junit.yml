@@ -5,7 +5,7 @@ spring:
     mongodb:
       uri: mongodb://localhost:27017
       database: test
-#      auto-index-creation: true
+      auto-index-creation: true
 
 
 aws:
