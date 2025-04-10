@@ -11,14 +11,14 @@ spring:
 aws:
   region: us-east-1
   access:
-    key: AKIATQPD64PLUGLK7H7B
-    secret-key: Gu60CwQvzEdOwGYryHuUnpZdQboSM9fnpySk7acJ
+    key: fake-access-key
+    secret-key: fake-secret-key
   s3:
-    bucket-name: rayef-invoices
+    bucket-name: fakeB-bucket
   sqs:
     name: invoices
     queue:
-      url: "https://sqs.us-east-1.amazonaws.com/241533117399/invoices"
+      url: "http://localhost:5235/invoices"
 
 processing:
   batch:
