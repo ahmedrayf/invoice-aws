@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: onboarding
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: test
+      auto-index-creation: true
+
+
+aws:
+  region: us-east-1
+  access:
+    key: AKIATQPD64PLUGLK7H7B
+    secret-key: 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
+  s3:
+    bucket-name: rayef-invoices
+  sqs:
+    name: invoices
+    queue:
+      url: "https://sqs.us-east-1.amazonaws.com/241533117399/invoices"
+
+processing:
+  batch:
+    size: 100
