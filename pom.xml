@@ -29,6 +29,7 @@
     <properties>
         <java.version>17</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <s3mock_2.13.version>0.2.6</s3mock_2.13.version>
     </properties>
     <dependencies>
         <dependency>
@@ -77,6 +78,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.findify</groupId>
+            <artifactId>s3mock_2.13</artifactId>
+            <version>${s3mock_2.13.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 
