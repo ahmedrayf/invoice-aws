@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 @Validated
 public class InvoiceController {
-    private final InvoiceService service;
     private final InvoiceService invoiceService;
 
     @GetMapping("/{accountId}")
@@ -49,7 +48,7 @@ public class InvoiceController {
             @PathVariable @Pattern(regexp = "invoice_\\d{8}\\.csv",
                     message = "Invalid file name format") String invoiceName) throws ExecutionException, InterruptedException {
 
-        ProcessResult result = service.processFileAsync(invoiceName).get();
+        ProcessResult result = invoiceService.processFileAsync(invoiceName).get();
 
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .body(result.getSummary())
