@@ -1,0 +1,28 @@
+[
+  {
+    "id": "inv001",
+    "billId": "9999999999",
+    "accountId": "1234567890",
+    "issueDate": "2024-01-03",
+    "billPeriodFrom": "2023-11-26",
+    "billPeriodTo": "2023-12-25",
+    "name": "XXX GmbH",
+    "grossAmount": 183.97,
+    "netAmount": 154.60,
+    "taxAmount": 29.37,
+    "createdAt": "2023-01-01T10:00:00"
+  },
+  {
+    "id": "inv002",
+    "billId": "9999999998",
+    "accountId": "1234567899",
+    "issueDate": "2024-01-03",
+    "billPeriodFrom": "2023-11-26",
+    "billPeriodTo": "2023-12-25",
+    "name": "Stiftung XYV",
+    "grossAmount": 33.22,
+    "netAmount": 27.92,
+    "taxAmount": 5.30,
+    "createdAt": "2023-02-01T11:00:00"
+  }
+]

@@ -3,10 +3,19 @@ spring:
     name: onboarding
   data:
     mongodb:
-      uri: mongodb://localhost:27017
       database: test
       auto-index-creation: true
+      port: 0
 
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 5.0.5
+
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 aws:
   region: us-east-1
@@ -14,7 +23,7 @@ aws:
     key: fake-access-key
     secret-key: fake-secret-key
   s3:
-    bucket-name: fakeB-bucket
+    bucket-name: fake-bucket
   sqs:
     name: invoices
     queue:

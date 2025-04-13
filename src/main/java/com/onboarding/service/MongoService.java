@@ -22,12 +22,17 @@ public class MongoService {
 
     @Transactional
     public void saveAll(List<Invoice> invoices) {
+        if (invoices == null || invoices.isEmpty())
+            throw new IllegalArgumentException("Invoices is null or empty");
+
         log.info("Adding invoices to Mongo");
         invoiceRepo.saveAll(invoices);
     }
 
     public Page<InvoiceDTO> getByAccountId(String accountId ,int pageNumber ,int pageCount)
     {
+        if (accountId == null)
+            throw new IllegalArgumentException("AccountId is null");
         Page<Invoice> invoices = invoiceRepo.findByAccountId(accountId ,PageRequest.of(pageNumber,pageCount));
         return invoiceMapper.mapToPageableDto(invoices);
 
