@@ -31,7 +31,7 @@ public class MongoService {
     {
         if (accountId == null)
             throw new IllegalArgumentException("AccountId is null");
-        Page<Invoice> invoices = invoiceRepo.findByAccountId(accountId ,PageRequest.of(pageNumber -1,pageCount));
+        Page<Invoice> invoices = invoiceRepo.findByAccountId(accountId ,PageRequest.of(pageNumber,pageCount));
         return invoiceMapper.mapToPageableDto(invoices);
 
     }
