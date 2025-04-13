@@ -21,14 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class S3ServiceTest
-
-{
-
+class S3ServiceTest {
 
     @Mock
     private S3Client s3Client;
-
     @InjectMocks
     private S3Service s3Service;
 
