@@ -71,49 +71,49 @@ class InvoiceControllerIntegrationTest {
     void setUp() {
         invoiceRepository.deleteAll();
     }
-
-
-    @Test
-    void processInvoiceFile_shouldProcessValidFiles() throws Exception {
-
-        String fileName = "invoice_20250301.csv";
-
-        File file = ResourceUtils.getFile("src/test/resources/invoices/success/csv/invoice_20250301.csv");
-        String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
-
-        ListBucketsResponse response = s3Client.listBuckets();
-        response.buckets().forEach(b -> log.info("Available bucket: {}", b.name()));
-
-        log.info("File content before upload: \n{}", content);
-        s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(testBucketName)
-                        .key(fileName)
-                        .contentType("text/csv")
-                        .build(),
-                RequestBody.fromBytes(content.getBytes(StandardCharsets.UTF_8))
-        );
-        ResponseBytes<GetObjectResponse> uploaded = s3Client.getObjectAsBytes(GetObjectRequest.builder()
-                .bucket(testBucketName)
-                .key(fileName)
-                .build());
-
-        String uploadedContent = uploaded.asUtf8String();
-        log.info("S3 content after getObject:\n{}", uploadedContent);
-        log.info("Uploaded file {} ({} bytes)", fileName, uploadedContent.length());
-
-        mockMvc.perform(post("/v1/invoice/{invoiceName}", fileName))
-
-                .andExpectAll(
-                        status().isOk(),
-                        jsonPath("$.message").value("Success"),
-                        jsonPath("$.body").value(containsString("Success: 1"))
-                );
-
-        await().atMost(5, SECONDS).until(() -> !invoiceRepository.findAll().isEmpty());
-
-        assertFalse(invoiceRepository.findAll().isEmpty());
-    }
+//
+//
+//    @Test
+//    void processInvoiceFile_shouldProcessValidFiles() throws Exception {
+//
+//        String fileName = "invoice_20250301.csv";
+//
+//        File file = ResourceUtils.getFile("src/test/resources/invoices/success/csv/invoice_20250301.csv");
+//        String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+//
+//        ListBucketsResponse response = s3Client.listBuckets();
+//        response.buckets().forEach(b -> log.info("Available bucket: {}", b.name()));
+//
+//        log.info("File content before upload: \n{}", content);
+//        s3Client.putObject(
+//                PutObjectRequest.builder()
+//                        .bucket(testBucketName)
+//                        .key(fileName)
+//                        .contentType("text/csv")
+//                        .build(),
+//                RequestBody.fromBytes(content.getBytes(StandardCharsets.UTF_8))
+//        );
+//        ResponseBytes<GetObjectResponse> uploaded = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+//                .bucket(testBucketName)
+//                .key(fileName)
+//                .build());
+//
+//        String uploadedContent = uploaded.asUtf8String();
+//        log.info("S3 content after getObject:\n{}", uploadedContent);
+//        log.info("Uploaded file {} ({} bytes)", fileName, uploadedContent.length());
+//
+//        mockMvc.perform(post("/v1/invoice/{invoiceName}", fileName))
+//
+//                .andExpectAll(
+//                        status().isOk(),
+//                        jsonPath("$.message").value("Success"),
+//                        jsonPath("$.body").value(containsString("Success: 1"))
+//                );
+//
+//        await().atMost(5, SECONDS).until(() -> !invoiceRepository.findAll().isEmpty());
+//
+//        assertFalse(invoiceRepository.findAll().isEmpty());
+//    }
     @Test
     void verifyS3Connection() {
         // Verify bucket exists

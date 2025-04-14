@@ -38,6 +38,7 @@ public interface InvoiceMapper {
                 .collect(Collectors.toList());
     }
 
+    @Mapping(target = "content", source = "rawLine")
     SQSMessage toSqsMessage(InvoiceDTO dto);
 
     default List<SQSMessage> mapToSqs(List<InvoiceDTO> dtos ){
