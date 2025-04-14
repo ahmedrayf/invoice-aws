@@ -28,7 +28,7 @@ public class InvoiceController {
     private final InvoiceService invoiceService;
     private final MongoService mongoService;
 
-    @GetMapping("/{accountId}")
+    @GetMapping("/findByAccountId/{accountId}")
     public ResponseEntity<PageableResponse<List<InvoiceDTO>>> getInvoicesByAccountId(
             @PathVariable String accountId,
             @RequestParam(defaultValue = "0") int pageNum,
@@ -60,5 +60,7 @@ public class InvoiceController {
                 .timestamp(LocalDateTime.now())
                 .build());
     }
+
+
 
 }
