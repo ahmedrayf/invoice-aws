@@ -61,6 +61,8 @@ class InvoiceServiceTest {
 
         when(s3Service.getFileInputStream(TEST_FILE_NAME))
                 .thenReturn(Files.newInputStream(file.toPath()));
+        when(s3Service.getFileInputStream(TEST_FILE_NAME))
+                .thenReturn(Files.newInputStream(file.toPath()));
 
         InvoiceDTO dto1 = new InvoiceDTO();
         InvoiceDTO dto2 = new InvoiceDTO();

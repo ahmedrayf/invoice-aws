@@ -79,7 +79,7 @@ public class InvoiceService {
 
         } catch (InvoiceProcessingException e) {
             result.addError(lineNumber, e.getMessage());
-            log.warn("Line {} processing failed: {}", lineNumber, e.getMessage());
+            log.error("Line {} processing failed: {}", lineNumber, e.getMessage());
         }
     }
 
