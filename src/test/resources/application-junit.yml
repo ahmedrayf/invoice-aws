@@ -31,4 +31,4 @@ aws:
 
 processing:
   batch:
-    size: 100
+    size: 10

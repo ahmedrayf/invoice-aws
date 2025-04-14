@@ -51,7 +51,7 @@ public class InvoiceController {
                     message = "Invalid file name format") String invoiceName) throws ExecutionException, InterruptedException {
 
         ProcessResult result = invoiceService.processFileAsync(invoiceName).get();
-
+        log.info("Result: {}", result);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .body(result.getSummary())
                 .httpStatus(HttpStatus.OK)

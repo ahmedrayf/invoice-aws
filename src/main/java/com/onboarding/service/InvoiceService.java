@@ -49,9 +49,11 @@ public class InvoiceService {
         try (InputStream inputStream = s3Service.getFileInputStream(invoiceName)) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             List<InvoiceDTO> batch = new ArrayList<>(batchSize);
+            log.info("batches {}", batchSize);
             String line;
             int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
+                log.info(">> Line from S3 file: {}", line);
                 lineNumber++;
                 parseS3Line(line, lineNumber, batch, result);
                 if (batch.size() >= batchSize) {
@@ -85,8 +87,8 @@ public class InvoiceService {
 
 
     private void persistInvoices(List<InvoiceDTO> dtos, ProcessResult result) {
-
-        try {
+        log.info("Persisting {} invoices", dtos.size());
+            try {
             List<Invoice> entities = invoiceMapper.mapDtosToEntities(dtos);
             mongoService.saveAll(entities);
             List<SQSMessage> messages = invoiceMapper.mapToSqs(dtos);
