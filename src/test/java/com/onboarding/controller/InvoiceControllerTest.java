@@ -1,6 +1,5 @@
-package controller;
+package com.onboarding.controller;
 
-import com.onboarding.controller.InvoiceController;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.response.ApiResponse;
