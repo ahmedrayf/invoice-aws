@@ -4,9 +4,13 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017
-      database: test
+      database: onboard
       auto-index-creation: true
 
+
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 aws:
   region: us-east-1

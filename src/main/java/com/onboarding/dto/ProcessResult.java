@@ -1,11 +1,12 @@
 package com.onboarding.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
+@AllArgsConstructor
 public class ProcessResult {
     private final String filename;
     private int successCount = 0;

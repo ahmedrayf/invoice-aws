@@ -4,11 +4,16 @@ import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.handler.InvoiceProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,24 +51,10 @@ class CSVParserTest {
     }
 
 
+
     @ParameterizedTest(name = "[{index}] {0}")
-    @ValueSource(strings = {
-            "", // empty line (0 fields)
-            "|;|;|;|;|;|;|;|;|;|;|;|;|;|;|;|;", // 17 delimiters but only 17 fields (needs 18)
-            "|||||||||||||||||", // all empty fields (wrong delimiter format)
-            "BILL001;ACC123;01.01.2023;...;20.00", // wrong delimiter (using ; instead of |;)
-            "BILL001|;ACC123|;invalid-date|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80.00|;20.00", // invalid issueDate
-            "BILL001|;ACC123|;01.01.2023|;invalid-date|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80.00|;20.00", // invalid bill_period_from
-            "BILL001|;ACC123|;01.01.2023|;01.01.2023|;invalid-date|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80.00|;20.00", // invalid bill_period_to
-            "BILL001|;ACC123|;01.01.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;not-a-number|;80.00|;20.00", // invalid grossAmount
-            "BILL001|;ACC123|;01.01.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;not-a-number|;20.00", // invalid netAmount
-            "BILL001|;ACC123|;01.01.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80.00|;not-a-number", // invalid taxAmount
-            "BILL001|;ACC123|;32.01.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80.00|;20.00", // invalid day in date
-            "BILL001|;ACC123|;01.13.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80.00|;20.00", // invalid month in date
-            "BILL001|;ACC123|;01.01.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100,00|;80.00|;20.00", // comma decimal separator
-            "BILL001|;ACC123|;01.01.2023|;01.01.2023|;01.01.2023|;f5|;f6|;f7|;f8|;f9|;John|;Doe|;f12|;f13|;f14|;100.00|;80,00|;20.00", // mixed decimal separators
-    })
-    void parseLine_invalidFormats_throwsExceptions(String line) {
+    @MethodSource("loadInvalidInvoiceCases")
+    void parseLine_invalidFormats_throwExceptions(String line)  {
         InvoiceProcessingException exception = assertThrows(
                 InvoiceProcessingException.class,
                 () -> parser.parseLine(line, 3)
@@ -74,10 +65,19 @@ class CSVParserTest {
 
         // Additional assertions for specific error types
         if (line.contains("invalid-date")) {
-            assertInstanceOf(DateTimeParseException.class, exception.getCause(), "Should contain date parsing exception");
+            assertInstanceOf(DateTimeParseException.class, exception.getCause(),
+                    "Should contain date parsing exception");
         } else if (line.contains("not-a-number") || line.contains(",")) {
-            assertInstanceOf(NumberFormatException.class, exception.getCause(), "Should contain number format exception");
+            assertInstanceOf(NumberFormatException.class, exception.getCause(),
+                    "Should contain number format exception");
         }
     }
 
+
+    static Stream<String> loadInvalidInvoiceCases() throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get("src/test/resources/invoices/failure/invalid_invoice_cases.csv"));
+        return lines.stream()
+                .filter(line -> !line.trim().isEmpty())
+                .map(line -> line.split("\\|", 2)[1].trim());
+    }
 }

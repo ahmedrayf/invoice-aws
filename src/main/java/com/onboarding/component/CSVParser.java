@@ -20,6 +20,7 @@ public class CSVParser {
             if (fields.length < 18) {
                 throw new InvoiceProcessingException("Insufficient fields. Expected at least 18");
             }
+            log.debug("Parsing line {}: {}", lineNumber, csvLine);
 
             return InvoiceDTO.builder()
                     .billId(fields[0].trim())
@@ -34,6 +35,7 @@ public class CSVParser {
                     .rawLine(csvLine)
                     .build();
         } catch (Exception e) {
+            log.error("Error Parsing Line {} : ex : {}",lineNumber, e.getMessage());
             throw new InvoiceProcessingException(
                     String.format("Line %d: %s", lineNumber, e.getMessage()), e);
         }

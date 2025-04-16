@@ -5,6 +5,7 @@ import com.onboarding.dto.response.ApiResponse;
 import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.response.PageableResponse;
 import com.onboarding.service.InvoiceService;
+import com.onboarding.service.MongoService;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,16 +25,16 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 @Validated
 public class InvoiceController {
-    private final InvoiceService service;
     private final InvoiceService invoiceService;
+    private final MongoService mongoService;
 
-    @GetMapping("/{accountId}")
+    @GetMapping("/findByAccountId/{accountId}")
     public ResponseEntity<PageableResponse<List<InvoiceDTO>>> getInvoicesByAccountId(
             @PathVariable String accountId,
-            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "0") int pageNum,
             @RequestParam(defaultValue = "10") int count) {
 
-            Page<InvoiceDTO> result = invoiceService.getByAccountId(accountId, pageNum, count);
+            Page<InvoiceDTO> result = mongoService.getByAccountId(accountId, pageNum, count);
             return ResponseEntity.ok(PageableResponse.<List<InvoiceDTO>>builder()
                     .body(result.getContent())
                     .httpStatus(HttpStatus.OK)
@@ -49,8 +50,8 @@ public class InvoiceController {
             @PathVariable @Pattern(regexp = "invoice_\\d{8}\\.csv",
                     message = "Invalid file name format") String invoiceName) throws ExecutionException, InterruptedException {
 
-        ProcessResult result = service.processFileAsync(invoiceName).get();
-
+        ProcessResult result = invoiceService.processFileAsync(invoiceName).get();
+        log.info("Result: {}", result);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .body(result.getSummary())
                 .httpStatus(HttpStatus.OK)
@@ -59,5 +60,7 @@ public class InvoiceController {
                 .timestamp(LocalDateTime.now())
                 .build());
     }
+
+
 
 }

@@ -3,8 +3,10 @@ package com.onboarding.entity;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
 @Data
 @Document("invoices")
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Invoice {
     @Id
     private String id;

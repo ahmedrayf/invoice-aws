@@ -13,13 +13,10 @@ import com.onboarding.service.aws.SqsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -39,23 +36,24 @@ public class InvoiceService {
     private int batchSize;
 
 
-    public Page<InvoiceDTO> getByAccountId(String accountId , int pageNumber , int pageCount){
-        return mongoService.getByAccountId(accountId ,pageNumber , pageCount);
-    }
-
-
     @Async
     public CompletableFuture<ProcessResult> processFileAsync(String invoiceName) {
-        log.info("Processing invoice {}", invoiceName);
         ProcessResult result = new ProcessResult(invoiceName);
+        if (!invoiceName.toLowerCase().endsWith(".csv")) {
+            result.addError(0, "Only .csv files are allowed");
+            return CompletableFuture.completedFuture(result);
+        }
 
+        log.info("Processing invoice {}", invoiceName);
 
         try (InputStream inputStream = s3Service.getFileInputStream(invoiceName)) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             List<InvoiceDTO> batch = new ArrayList<>(batchSize);
+            log.info("batches {}", batchSize);
             String line;
             int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
+                log.info(">> Line from S3 file: {}", line);
                 lineNumber++;
                 parseS3Line(line, lineNumber, batch, result);
                 if (batch.size() >= batchSize) {
@@ -83,14 +81,14 @@ public class InvoiceService {
 
         } catch (InvoiceProcessingException e) {
             result.addError(lineNumber, e.getMessage());
-            log.warn("Line {} processing failed: {}", lineNumber, e.getMessage());
+            log.error("Line {} processing failed: {}", lineNumber, e.getMessage());
         }
     }
 
 
     private void persistInvoices(List<InvoiceDTO> dtos, ProcessResult result) {
-
-        try {
+        log.info("Persisting {} invoices", dtos.size());
+            try {
             List<Invoice> entities = invoiceMapper.mapDtosToEntities(dtos);
             mongoService.saveAll(entities);
             List<SQSMessage> messages = invoiceMapper.mapToSqs(dtos);
@@ -103,9 +101,6 @@ public class InvoiceService {
             throw e;
         }
     }
-
-
-
 
 }
 

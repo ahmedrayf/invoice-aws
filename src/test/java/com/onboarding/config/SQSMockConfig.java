@@ -1,8 +1,8 @@
 package com.onboarding.config;
 
 import org.mockito.Mockito;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.mock;
 
-@Configuration
+@TestConfiguration
 @Profile("junit")
 public class SQSMockConfig {
 

@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Mapper(componentModel = "spring")
@@ -35,9 +34,10 @@ public interface InvoiceMapper {
                     entity.setCreatedAt(LocalDateTime.now());
                     return entity;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
+    @Mapping(target = "content", source = "rawLine")
     SQSMessage toSqsMessage(InvoiceDTO dto);
 
     default List<SQSMessage> mapToSqs(List<InvoiceDTO> dtos ){
@@ -48,7 +48,7 @@ public interface InvoiceMapper {
                     message.setContent(dto.getRawLine());
                     return message;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 //
 
