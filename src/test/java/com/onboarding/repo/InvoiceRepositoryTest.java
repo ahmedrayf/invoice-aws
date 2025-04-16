@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.onboarding.config.CacheTestConfig;
 import com.onboarding.entity.Invoice;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.cache.CacheManager;
@@ -28,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataMongoTest
 @Import(CacheTestConfig.class)
 @ActiveProfiles("junit")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
  class  InvoiceRepositoryTest {
 
     @Autowired
@@ -44,13 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
         File file = ResourceUtils.getFile("src/test/resources/invoices/success/entity/invoices-entities.json");
         String content = Files.readString(file.toPath());
         ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        testInvoices = mapper.readValue(content, new TypeReference<List<Invoice>>() {});
+        testInvoices = mapper.readValue(content, new TypeReference<>() {});
         invoiceRepository.saveAll(testInvoices);}
-
-    @AfterEach
-    void cleanUp(){
-        invoiceRepository.deleteAll();
-    }
 
 
     @Test
