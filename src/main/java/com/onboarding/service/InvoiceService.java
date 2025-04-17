@@ -53,7 +53,6 @@ public class InvoiceService {
             String line;
             int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
-                log.info(">> Line from S3 file: {}", line);
                 lineNumber++;
                 parseS3Line(line, lineNumber, batch, result);
                 if (batch.size() >= batchSize) {

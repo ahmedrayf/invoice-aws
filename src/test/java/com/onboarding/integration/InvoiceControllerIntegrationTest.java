@@ -5,8 +5,8 @@ import com.onboarding.config.SQSMockConfig;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.mapper.InvoiceMapper;
 import com.onboarding.repo.InvoiceRepository;
-import com.onboarding.service.InvoiceService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -17,11 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.ResourceUtils;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -61,9 +58,10 @@ class InvoiceControllerIntegrationTest {
     private String testBucketName;
 
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("aws.s3.bucket-name", () -> "test-bucket");
+    @BeforeAll
+    void createBucket(){
+        CreateBucketRequest createBucketRequest1 = CreateBucketRequest.builder().bucket(testBucketName).build();
+        s3Client.createBucket(createBucketRequest1);
     }
 
 
@@ -71,60 +69,48 @@ class InvoiceControllerIntegrationTest {
     void setUp() {
         invoiceRepository.deleteAll();
     }
-//
-//
-//    @Test
-//    void processInvoiceFile_shouldProcessValidFiles() throws Exception {
-//
-//        String fileName = "invoice_20250301.csv";
-//
-//        File file = ResourceUtils.getFile("src/test/resources/invoices/success/csv/invoice_20250301.csv");
-//        String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
-//
-//        ListBucketsResponse response = s3Client.listBuckets();
-//        response.buckets().forEach(b -> log.info("Available bucket: {}", b.name()));
-//
-//        log.info("File content before upload: \n{}", content);
-//        s3Client.putObject(
-//                PutObjectRequest.builder()
-//                        .bucket(testBucketName)
-//                        .key(fileName)
-//                        .contentType("text/csv")
-//                        .build(),
-//                RequestBody.fromBytes(content.getBytes(StandardCharsets.UTF_8))
-//        );
-//        ResponseBytes<GetObjectResponse> uploaded = s3Client.getObjectAsBytes(GetObjectRequest.builder()
-//                .bucket(testBucketName)
-//                .key(fileName)
-//                .build());
-//
-//        String uploadedContent = uploaded.asUtf8String();
-//        log.info("S3 content after getObject:\n{}", uploadedContent);
-//        log.info("Uploaded file {} ({} bytes)", fileName, uploadedContent.length());
-//
-//        mockMvc.perform(post("/v1/invoice/{invoiceName}", fileName))
-//
-//                .andExpectAll(
-//                        status().isOk(),
-//                        jsonPath("$.message").value("Success"),
-//                        jsonPath("$.body").value(containsString("Success: 1"))
-//                );
-//
-//        await().atMost(5, SECONDS).until(() -> !invoiceRepository.findAll().isEmpty());
-//
-//        assertFalse(invoiceRepository.findAll().isEmpty());
-//    }
+
     @Test
     void verifyS3Connection() {
         // Verify bucket exists
         List<Bucket> buckets = s3Client.listBuckets().buckets();
         assertFalse(buckets.isEmpty());
-        assertEquals("test-bucket", buckets.get(0).name());
+        assertEquals(testBucketName, buckets.get(0).name());
 
         // Verify endpoint configuration
         String endpoint = s3Client.serviceClientConfiguration().endpointOverride()
                 .orElse(URI.create("default")).toString();
         assertTrue(endpoint.matches("http://localhost:\\d+"));
+    }
+
+    @Test
+    void processInvoiceFile_shouldProcessValidFiles() throws Exception {
+
+        String fileName = "invoice_20250301.csv";
+
+        File file = ResourceUtils.getFile("src/test/resources/invoices/success/csv/invoice_20250301.csv");
+        String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+        log.info("File content before upload: \n{}", content);
+
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(testBucketName)
+                        .key(fileName)
+                        .build(),
+                RequestBody.fromBytes(content.getBytes(StandardCharsets.UTF_8))
+        );
+
+        mockMvc.perform(post("/v1/invoice/{invoiceName}", fileName))
+
+                .andExpectAll(
+                        status().isOk(),
+                        jsonPath("$.message").value("Success"),
+                        jsonPath("$.body").value(containsString("Success: 2"))
+                );
+
+        await().atMost(5, SECONDS).until(() -> !invoiceRepository.findAll().isEmpty());
+
+        assertFalse(invoiceRepository.findAll().isEmpty());
     }
 
 

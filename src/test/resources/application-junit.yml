@@ -24,6 +24,8 @@ aws:
     secret-key: fake-secret-key
   s3:
     bucket-name: fake-bucket
+    mock:
+      port: 9096
   sqs:
     name: invoices
     queue:
