@@ -1,5 +1,6 @@
 package com.onboarding.service.aws;
 
+import com.onboarding.handler.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +32,7 @@ public class S3Service {
 
         } catch (S3Exception e) {
             log.error("Failed to get file from S3: {}/{} - {}", bucketName, key, e.getMessage());
-            throw new IOException("S3 access failed: " + e.getMessage(), e);
+            throw new ResourceNotFoundException("S3 access failed: " + e.getMessage(), e);
         }
     }
 

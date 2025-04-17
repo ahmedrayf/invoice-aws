@@ -131,14 +131,13 @@ class InvoiceServiceTest {
     }
 
     @Test
-    void processFileAsync_shouldHandleS3Errors() throws Exception {
+    void processFileAsync_shouldHandleS3Exception() throws Exception {
         when(s3Service.getFileInputStream(TEST_FILE_NAME))
-                .thenThrow(new RuntimeException("S3 error"));
+                .thenThrow(new RuntimeException("S3 access failed"));
 
-        ProcessResult result = invoiceService.processFileAsync(TEST_FILE_NAME).get();
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> invoiceService.processFileAsync(TEST_FILE_NAME));
+        assertEquals("S3 access failed", ex.getMessage());
 
-        assertEquals(0, result.getSuccessCount());
-        assertTrue(result.getErrors().get(0).contains("S3 error"));
     }
 
     @Test

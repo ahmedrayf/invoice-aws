@@ -6,6 +6,7 @@ import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.SQSMessage;
 import com.onboarding.entity.Invoice;
 import com.onboarding.handler.InvoiceProcessingException;
+import com.onboarding.handler.ResourceNotFoundException;
 import com.onboarding.mapper.InvoiceMapper;
 import com.onboarding.service.aws.S3Service;
 import com.onboarding.component.CSVParser;
@@ -37,7 +38,7 @@ public class InvoiceService {
 
 
     @Async
-    public CompletableFuture<ProcessResult> processFileAsync(String invoiceName) {
+    public CompletableFuture<ProcessResult> processFileAsync(String invoiceName)  {
         ProcessResult result = new ProcessResult(invoiceName);
         if (!invoiceName.toLowerCase().endsWith(".csv")) {
             result.addError(0, "Only .csv files are allowed");
@@ -65,9 +66,13 @@ public class InvoiceService {
             }
 
 
-        } catch (Exception e) {
-            result.addError(0, "File processing error: " + e.getMessage());
-            log.error("File processing failed", e);
+        }
+        catch (ResourceNotFoundException e) {
+            log.error("Not found: {}", invoiceName, e);
+            throw new ResourceNotFoundException("Not found");
+        } catch (IOException e) {
+            log.error("Error while reading input stream: {}", invoiceName, e);
+            throw new InvoiceProcessingException("Error while reading input stream", e);
         }
 
         return CompletableFuture.completedFuture(result);
@@ -87,18 +92,21 @@ public class InvoiceService {
 
     private void persistInvoices(List<InvoiceDTO> dtos, ProcessResult result) {
         log.info("Persisting {} invoices", dtos.size());
-            try {
+        try {
             List<Invoice> entities = invoiceMapper.mapDtosToEntities(dtos);
             mongoService.saveAll(entities);
-            List<SQSMessage> messages = invoiceMapper.mapToSqs(dtos);
-            messages.forEach(sqsService::sendInvoice);
-
-            result.incrementSuccessCount(dtos.size());
+            sendMessages(dtos, result);
         } catch (MongoException e) {
             log.error("Batch save failed", e);
             result.addError(-1, "Batch save error: " + e.getMessage());
             throw e;
         }
+    }
+
+    private void sendMessages(List<InvoiceDTO> dtos, ProcessResult result) {
+        List<SQSMessage> messages = invoiceMapper.mapToSqs(dtos);
+        messages.forEach(sqsService::sendInvoice);
+        result.incrementSuccessCount(dtos.size());
     }
 
 }

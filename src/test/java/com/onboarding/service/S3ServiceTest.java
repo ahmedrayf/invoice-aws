@@ -1,5 +1,6 @@
 package com.onboarding.service;
 
+import com.onboarding.handler.ResourceNotFoundException;
 import com.onboarding.service.aws.S3Service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,9 +55,9 @@ class S3ServiceTest {
     }
 
     @Test
-    void getFileInputStream_ShouldWrapS3ExceptionAsIOException() {
+    void getFileInputStream_ShouldWrapS3ExceptionAsResourceException() {
         when(s3Client.getObject((GetObjectRequest) any())).thenThrow(S3Exception.builder().message("Error").build());
 
-        assertThrows(IOException.class, () -> s3Service.getFileInputStream(INVOICE_NAME));
+        assertThrows(ResourceNotFoundException.class, () -> s3Service.getFileInputStream(INVOICE_NAME));
     }
 }

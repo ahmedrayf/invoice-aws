@@ -4,6 +4,8 @@ import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.dto.response.ApiResponse;
 import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.response.PageableResponse;
+import com.onboarding.handler.InvoiceProcessingException;
+import com.onboarding.handler.ResourceNotFoundException;
 import com.onboarding.service.InvoiceService;
 import com.onboarding.service.MongoService;
 import jakarta.validation.constraints.Pattern;
@@ -46,11 +48,12 @@ public class InvoiceController {
 
 
     @PostMapping("/{invoiceName}")
-    public ResponseEntity<ApiResponse<String>> processInvoiceFile(
+    public ResponseEntity<ApiResponse<String>> processInvoiceFile (
             @PathVariable @Pattern(regexp = "invoice_\\d{8}\\.csv",
-                    message = "Invalid file name format") String invoiceName) throws ExecutionException, InterruptedException {
+                    message = "Invalid file name format") String invoiceName) throws ExecutionException {
 
-        ProcessResult result = invoiceService.processFileAsync(invoiceName).get();
+        try {
+            ProcessResult result = invoiceService.processFileAsync(invoiceName).get();
         log.info("Result: {}", result);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .body(result.getSummary())
@@ -59,6 +62,17 @@ public class InvoiceController {
                 .errors(result.hasErrors() ? result.getErrors() : null)
                 .timestamp(LocalDateTime.now())
                 .build());
+        }
+
+        catch (ExecutionException e) {
+            if (e.getCause() instanceof ResourceNotFoundException re) {
+                throw re;
+            }
+            throw new ExecutionException(e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new InvoiceProcessingException("Processing was interrupted", e);
+        }
     }
 
 

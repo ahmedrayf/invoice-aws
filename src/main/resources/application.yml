@@ -20,10 +20,9 @@ aws:
   s3:
     bucket-name: rayef-invoices
   sqs:
-    name: invoices
     queue:
       url: "https://sqs.us-east-1.amazonaws.com/241533117399/invoices"
 
 processing:
   batch:
-    size: 100
+    size: 10

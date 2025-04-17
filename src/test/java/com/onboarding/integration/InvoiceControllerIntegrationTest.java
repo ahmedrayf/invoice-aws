@@ -34,7 +34,9 @@ import java.util.List;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -43,145 +45,115 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("junit")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Import({S3TestConfig.class, SQSMockConfig.class})
+@Import({ S3TestConfig.class, SQSMockConfig.class })
 class InvoiceControllerIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private S3Client s3Client;
-    @Autowired
-    private InvoiceMapper invoiceMapper;
-    @Autowired
-    private InvoiceRepository invoiceRepository;
-    @Value("${aws.s3.bucket-name}")
-    private String testBucketName;
+	@Autowired
+	private MockMvc mockMvc;
+	@Autowired
+	private S3Client s3Client;
+	@Autowired
+	private InvoiceMapper invoiceMapper;
+	@Autowired
+	private InvoiceRepository invoiceRepository;
+	@Value("${aws.s3.bucket-name}")
+	private String testBucketName;
 
+	@BeforeAll
+	void createBucket() {
+		CreateBucketRequest createBucketRequest1 = CreateBucketRequest.builder().bucket(testBucketName).build();
+		s3Client.createBucket(createBucketRequest1);
+	}
 
-    @BeforeAll
-    void createBucket(){
-        CreateBucketRequest createBucketRequest1 = CreateBucketRequest.builder().bucket(testBucketName).build();
-        s3Client.createBucket(createBucketRequest1);
-    }
+	@BeforeEach
+	void setUp() {
+		invoiceRepository.deleteAll();
+	}
 
+	@Test
+	void verifyS3Connection() {
+		// Verify bucket exists
+		List<Bucket> buckets = s3Client.listBuckets().buckets();
+		assertFalse(buckets.isEmpty());
+		assertEquals(testBucketName, buckets.get(0).name());
 
-    @BeforeEach
-    void setUp() {
-        invoiceRepository.deleteAll();
-    }
+		// Verify endpoint configuration
+		String endpoint = s3Client.serviceClientConfiguration().endpointOverride().orElse(URI.create("default"))
+				.toString();
+		assertTrue(endpoint.matches("http://localhost:\\d+"));
+	}
 
-    @Test
-    void verifyS3Connection() {
-        // Verify bucket exists
-        List<Bucket> buckets = s3Client.listBuckets().buckets();
-        assertFalse(buckets.isEmpty());
-        assertEquals(testBucketName, buckets.get(0).name());
+	@Test
+	void processInvoiceFile_shouldProcessValidFiles() throws Exception {
 
-        // Verify endpoint configuration
-        String endpoint = s3Client.serviceClientConfiguration().endpointOverride()
-                .orElse(URI.create("default")).toString();
-        assertTrue(endpoint.matches("http://localhost:\\d+"));
-    }
+		String fileName = "invoice_20250301.csv";
 
-    @Test
-    void processInvoiceFile_shouldProcessValidFiles() throws Exception {
+		File file = ResourceUtils.getFile("src/test/resources/invoices/success/csv/invoice_20250301.csv");
+		String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+		log.info("File content before upload: \n{}", content);
 
-        String fileName = "invoice_20250301.csv";
+		s3Client.putObject(PutObjectRequest.builder().bucket(testBucketName).key(fileName).build(),
+				RequestBody.fromBytes(content.getBytes(StandardCharsets.UTF_8)));
 
-        File file = ResourceUtils.getFile("src/test/resources/invoices/success/csv/invoice_20250301.csv");
-        String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
-        log.info("File content before upload: \n{}", content);
+		mockMvc.perform(post("/v1/invoice/{invoiceName}", fileName))
 
-        s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(testBucketName)
-                        .key(fileName)
-                        .build(),
-                RequestBody.fromBytes(content.getBytes(StandardCharsets.UTF_8))
-        );
+				.andExpectAll(status().isOk(), jsonPath("$.message").value("Success"),
+						jsonPath("$.body").value(containsString("Success: 2")));
 
-        mockMvc.perform(post("/v1/invoice/{invoiceName}", fileName))
+		await().atMost(5, SECONDS).until(() -> !invoiceRepository.findAll().isEmpty());
 
-                .andExpectAll(
-                        status().isOk(),
-                        jsonPath("$.message").value("Success"),
-                        jsonPath("$.body").value(containsString("Success: 2"))
-                );
+		assertFalse(invoiceRepository.findAll().isEmpty());
+	}
 
-        await().atMost(5, SECONDS).until(() -> !invoiceRepository.findAll().isEmpty());
+	@Test
+	void getInvoicesByAccountId_shouldReturnInvoices() throws Exception {
+		// Given
+		String accountId = "ACC001";
+		InvoiceDTO invoice = createTestInvoice(accountId);
+		invoiceRepository.save(invoiceMapper.toEntity(invoice));
 
-        assertFalse(invoiceRepository.findAll().isEmpty());
-    }
+		// When & Then
+		mockMvc.perform(
+				get("/v1/invoice/findByAccountId/{accountId}", accountId).param("pageNum", "0").param("count", "10"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.message", is("Success")))
+				.andExpect(jsonPath("$.body[0].accountId", is(accountId))).andExpect(jsonPath("$.totalItems", is(1)));
+	}
 
+	@Test
+	void getInvoicesByAccountId_shouldReturnEmptyForUnknownAccount() throws Exception {
+		// Given
+		String unknownAccountId = "UNKNOWN_ACC";
 
-    @Test
-    void getInvoicesByAccountId_shouldReturnInvoices() throws Exception {
-        // Given
-        String accountId = "ACC001";
-        InvoiceDTO invoice = createTestInvoice(accountId);
-        invoiceRepository.save(invoiceMapper.toEntity(invoice));
+		// When & Then
+		mockMvc.perform(get("/v1/invoice/findByAccountId/{accountId}", unknownAccountId).param("pageNum", "0")
+				.param("count", "10")).andExpect(status().isOk()).andExpect(jsonPath("$.message", is("Not Found")));
+	}
 
-        // When & Then
-        mockMvc.perform(get("/v1/invoice/findByAccountId/{accountId}", accountId)
-                        .param("pageNum", "0")
-                        .param("count", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", is("Success")))
-                .andExpect(jsonPath("$.body[0].accountId", is(accountId)))
-                .andExpect(jsonPath("$.totalItems", is(1)));
-    }
+	@Test
+	void processInvoiceFile_shouldHandleMissingFile() throws Exception {
+		// Given
+		String nonExistentFile = "invoice_21220301.csv";
 
-    @Test
-    void getInvoicesByAccountId_shouldReturnEmptyForUnknownAccount() throws Exception {
-        // Given
-        String unknownAccountId = "UNKNOWN_ACC";
+		// When & Then
+		mockMvc.perform(post("/v1/invoice/{invoiceName}", nonExistentFile).contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNotFound()).andExpect(jsonPath("$.message", containsString("Not found")));
+	}
 
-        // When & Then
-        mockMvc.perform(get("/v1/invoice/findByAccountId/{accountId}", unknownAccountId)
-                        .param("pageNum", "0")
-                        .param("count", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", is("Not Found")));
-    }
+	@Test
+	void processInvoiceFile_shouldRejectInvalidFilename() throws Exception {
+		// Given
+		String invalidFilename = "invalid_name.txt";
 
+		// When & Then
+		mockMvc.perform(post("/v1/invoice/{invoiceName}", invalidFilename).contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message", containsString("Invalid file name format")));
+	}
 
-    @Test
-    void processInvoiceFile_shouldHandleMissingFile() throws Exception {
-        // Given
-        String nonExistentFile = "invoice_21220301.csv";
-
-        // When & Then
-        mockMvc.perform(post("/v1/invoice/{invoiceName}", nonExistentFile)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.errors", notNullValue()))
-                .andExpect(jsonPath("$.body", containsString("Errors: ")));
-    }
-
-    @Test
-    void processInvoiceFile_shouldRejectInvalidFilename() throws Exception {
-        // Given
-        String invalidFilename = "invalid_name.txt";
-
-        // When & Then
-        mockMvc.perform(post("/v1/invoice/{invoiceName}", invalidFilename)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", containsString("Invalid file name format")));
-    }
-
-    private InvoiceDTO createTestInvoice(String accountId) {
-        return InvoiceDTO.builder()
-                .billId("BILL-" + System.currentTimeMillis())
-                .accountId(accountId)
-                .issueDate(LocalDate.now())
-                .billPeriodFrom(LocalDate.now().minusDays(30))
-                .billPeriodTo(LocalDate.now())
-                .name("Test Invoice")
-                .grossAmount(new BigDecimal("100.00"))
-                .netAmount(new BigDecimal("80.00"))
-                .taxAmount(new BigDecimal("20.00"))
-                .rawLine("test|data|line")
-                .build();
-    }
+	private InvoiceDTO createTestInvoice(String accountId) {
+		return InvoiceDTO.builder().billId("BILL-" + System.currentTimeMillis()).accountId(accountId)
+				.issueDate(LocalDate.now()).billPeriodFrom(LocalDate.now().minusDays(30)).billPeriodTo(LocalDate.now())
+				.name("Test Invoice").grossAmount(new BigDecimal("100.00")).netAmount(new BigDecimal("80.00"))
+				.taxAmount(new BigDecimal("20.00")).rawLine("test|data|line").build();
+	}
 }

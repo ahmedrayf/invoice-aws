@@ -35,157 +35,142 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("junit")
 class InvoiceControllerTest {
 
-    @Mock
-    private MongoService mongoService;
+	@Mock
+	private MongoService mongoService;
 
-    @Mock
-    private InvoiceService invoiceService;
+	@Mock
+	private InvoiceService invoiceService;
 
-    @InjectMocks
-    private InvoiceController invoiceController;
+	@InjectMocks
+	private InvoiceController invoiceController;
 
-    private InvoiceDTO sampleInvoice;
-    private Page<InvoiceDTO> invoicePage;
+	private InvoiceDTO sampleInvoice;
+	private Page<InvoiceDTO> invoicePage;
 
-    @BeforeEach
-    void setUp() {
-        sampleInvoice = InvoiceDTO.builder()
-                .billId("BILL001")
-                .accountId("ACC001")
-                .issueDate(LocalDate.now())
-                .billPeriodFrom(LocalDate.now().minusDays(30))
-                .billPeriodTo(LocalDate.now())
-                .name("Test Invoice")
-                .grossAmount(new BigDecimal("100.00"))
-                .netAmount(new BigDecimal("80.00"))
-                .taxAmount(new BigDecimal("20.00"))
-                .rawLine("raw line data")
-                .build();
+	@BeforeEach
+	void setUp() {
+		sampleInvoice = InvoiceDTO.builder().billId("BILL001").accountId("ACC001").issueDate(LocalDate.now())
+				.billPeriodFrom(LocalDate.now().minusDays(30)).billPeriodTo(LocalDate.now()).name("Test Invoice")
+				.grossAmount(new BigDecimal("100.00")).netAmount(new BigDecimal("80.00"))
+				.taxAmount(new BigDecimal("20.00")).rawLine("raw line data").build();
 
-        List<InvoiceDTO> invoices = Collections.singletonList(sampleInvoice);
-        invoicePage = new PageImpl<>(invoices, PageRequest.of(0, 10), 1);
-    }
+		List<InvoiceDTO> invoices = Collections.singletonList(sampleInvoice);
+		invoicePage = new PageImpl<>(invoices, PageRequest.of(0, 10), 1);
+	}
 
-    @Test
-    void getInvoicesByAccountId_shouldReturnPageableResponse() {
-        // Arrange
-        when(mongoService.getByAccountId(anyString(), anyInt(), anyInt()))
-                .thenReturn(invoicePage);
+	@Test
+	void getInvoicesByAccountId_shouldReturnPageableResponse() {
+		// Arrange
+		when(mongoService.getByAccountId(anyString(), anyInt(), anyInt())).thenReturn(invoicePage);
 
-        // Act
-        ResponseEntity<PageableResponse<List<InvoiceDTO>>> response =
-                invoiceController.getInvoicesByAccountId("ACC001", 0, 10);
+		// Act
+		ResponseEntity<PageableResponse<List<InvoiceDTO>>> response = invoiceController.getInvoicesByAccountId("ACC001",
+				0, 10);
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+		// Assert
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        PageableResponse<List<InvoiceDTO>> body = response.getBody();
-        assertNotNull(body);
-        assertEquals("Success", body.getMessage());
-        assertEquals(1, body.getBody().size());
-        assertEquals(sampleInvoice, body.getBody().get(0));
-        assertEquals(0, body.getCurrentPage());
-        assertEquals(1, body.getTotalItems());
-        assertEquals(1, body.getTotalPages());
-        assertEquals(1, body.getCurrentItems());
-    }
+		PageableResponse<List<InvoiceDTO>> body = response.getBody();
+		assertNotNull(body);
+		assertEquals("Success", body.getMessage());
+		assertEquals(1, body.getBody().size());
+		assertEquals(sampleInvoice, body.getBody().get(0));
+		assertEquals(0, body.getCurrentPage());
+		assertEquals(1, body.getTotalItems());
+		assertEquals(1, body.getTotalPages());
+		assertEquals(1, body.getCurrentItems());
+	}
 
-    @Test
-    void getInvoicesByAccountId_shouldReturnNotFoundWhenEmpty() {
-        // Arrange
-        Page<InvoiceDTO> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(mongoService.getByAccountId(anyString(), anyInt(), anyInt()))
-                .thenReturn(emptyPage);
+	@Test
+	void getInvoicesByAccountId_shouldReturnNotFoundWhenEmpty() {
+		// Arrange
+		Page<InvoiceDTO> emptyPage = new PageImpl<>(Collections.emptyList());
+		when(mongoService.getByAccountId(anyString(), anyInt(), anyInt())).thenReturn(emptyPage);
 
-        // Act
-        ResponseEntity<PageableResponse<List<InvoiceDTO>>> response =
-                invoiceController.getInvoicesByAccountId("NON_EXISTENT", 0, 10);
+		// Act
+		ResponseEntity<PageableResponse<List<InvoiceDTO>>> response = invoiceController
+				.getInvoicesByAccountId("NON_EXISTENT", 0, 10);
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+		// Assert
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        PageableResponse<List<InvoiceDTO>> body = response.getBody();
-        assertNotNull(body);
-        assertEquals("Not Found", body.getMessage());
-        assertTrue(body.getBody().isEmpty());
-    }
+		PageableResponse<List<InvoiceDTO>> body = response.getBody();
+		assertNotNull(body);
+		assertEquals("Not Found", body.getMessage());
+		assertTrue(body.getBody().isEmpty());
+	}
 
-    @Test
-    void processInvoiceFile_shouldProcessSuccessfully() throws ExecutionException, InterruptedException {
-        // Arrange
-        String filename = "invoice_20250301.csv";
-        ProcessResult processResult = new ProcessResult(filename);
-        processResult.incrementSuccessCount(10);
+	@Test
+	void processInvoiceFile_shouldProcessSuccessfully() throws ExecutionException{
+		// Arrange
+		String filename = "invoice_20250301.csv";
+		ProcessResult processResult = new ProcessResult(filename);
+		processResult.incrementSuccessCount(10);
 
-        when(invoiceService.processFileAsync(filename))
-                .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(processResult));
+		when(invoiceService.processFileAsync(filename))
+				.thenReturn(java.util.concurrent.CompletableFuture.completedFuture(processResult));
 
-        // Act
-        ResponseEntity<ApiResponse<String>> response =
-                invoiceController.processInvoiceFile(filename);
+		// Act
+		ResponseEntity<ApiResponse<String>> response = invoiceController.processInvoiceFile(filename);
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+		// Assert
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        ApiResponse<String> body = response.getBody();
-        assertNotNull(body);
-        assertEquals("Success", body.getMessage());
-        assertTrue(body.getBody().contains("Success: 10"));
-        assertNull(body.getErrors());
-    }
+		ApiResponse<String> body = response.getBody();
+		assertNotNull(body);
+		assertEquals("Success", body.getMessage());
+		assertTrue(body.getBody().contains("Success: 10"));
+		assertNull(body.getErrors());
+	}
 
-    @Test
-    void processInvoiceFile_shouldIncludeErrorsWhenPresent() throws ExecutionException, InterruptedException {
-        // Arrange
-        String filename = "invoice_20250301.csv";
-        ProcessResult processResult = new ProcessResult(filename);
-        processResult.incrementSuccessCount(8);
-        processResult.addError(3, "Invalid amount");
-        processResult.addError(7, "Missing field");
+	@Test
+	void processInvoiceFile_shouldIncludeErrorsWhenPresent()
+			throws ExecutionException {
+		// Arrange
+		String filename = "invoice_20250301.csv";
+		ProcessResult processResult = new ProcessResult(filename);
+		processResult.incrementSuccessCount(8);
+		processResult.addError(3, "Invalid amount");
+		processResult.addError(7, "Missing field");
 
-        when(invoiceService.processFileAsync(filename))
-                .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(processResult));
+		when(invoiceService.processFileAsync(filename))
+				.thenReturn(java.util.concurrent.CompletableFuture.completedFuture(processResult));
 
-        // Act
-        ResponseEntity<ApiResponse<String>> response =
-                invoiceController.processInvoiceFile(filename);
+		// Act
+		ResponseEntity<ApiResponse<String>> response = invoiceController.processInvoiceFile(filename);
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+		// Assert
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        ApiResponse<String> body = response.getBody();
-        assertNotNull(body);
-        assertEquals("Success", body.getMessage());
-        assertTrue(body.getBody().contains("Success: 8"));
-        assertTrue(body.getBody().contains("Errors: 2"));
-        assertNotNull(body.getErrors());
-        assertInstanceOf(Map.class, body.getErrors());
-        Map<?, ?> errorsMap = (Map<?, ?>) body.getErrors();
-        assertEquals(2, errorsMap.size());
-        assertEquals("Invalid amount", errorsMap.get(3));
-        assertEquals("Missing field", errorsMap.get(7));
-    }
+		ApiResponse<String> body = response.getBody();
+		assertNotNull(body);
+		assertEquals("Success", body.getMessage());
+		assertTrue(body.getBody().contains("Success: 8"));
+		assertTrue(body.getBody().contains("Errors: 2"));
+		assertNotNull(body.getErrors());
+		assertInstanceOf(Map.class, body.getErrors());
+		Map<?, ?> errorsMap = (Map<?, ?>) body.getErrors();
+		assertEquals(2, errorsMap.size());
+		assertEquals("Invalid amount", errorsMap.get(3));
+		assertEquals("Missing field", errorsMap.get(7));
+	}
 
+	@Test
+	void processInvoiceFile_shouldHandleExecutionException() {
+		// Arrange
+		String filename = "invoice_20250301.csv";
+		when(invoiceService.processFileAsync(filename)).thenAnswer(invocation -> {
+			throw new ExecutionException("Processing failed", new RuntimeException("Error"));
+		});
 
-    @Test
-    void processInvoiceFile_shouldHandleExecutionException() {
-        // Arrange
-        String filename = "invoice_20250301.csv";
-        when(invoiceService.processFileAsync(filename))
-                .thenAnswer(invocation -> {
-                    throw new ExecutionException("Processing failed", new RuntimeException("Error"));
-                });
-
-        // Act & Assert
-        ExecutionException exception = assertThrows(
-                ExecutionException.class,
-                () -> invoiceController.processInvoiceFile(filename)
-        );
-        assertEquals("Processing failed", exception.getMessage());
-    }
+		// Act & Assert
+		ExecutionException exception = assertThrows(ExecutionException.class,
+				() -> invoiceController.processInvoiceFile(filename));
+		assertEquals("Processing failed", exception.getMessage());
+	}
 
 }

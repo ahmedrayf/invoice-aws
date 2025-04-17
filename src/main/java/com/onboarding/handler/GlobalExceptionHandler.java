@@ -27,6 +27,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleIOException(
+            ResourceNotFoundException ex) {
+        log.error("Source not found: {}", ex.getMessage(), ex);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     @ExceptionHandler(InterruptedException.class)
     public ResponseEntity<ApiResponse<String>> handleInterruptedException(
             InterruptedException ex) {
