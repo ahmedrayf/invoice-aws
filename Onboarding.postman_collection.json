@@ -1,0 +1,58 @@
+{
+	"info": {
+		"_postman_id": "b1e6965d-c089-47dd-a70f-76796163a3d3",
+		"name": "Onboarding",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9235845"
+	},
+	"item": [
+		{
+			"name": "processInvoice",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/invoice/invoice_20250205.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"invoice",
+						"invoice_20250205.csv"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "processBigInvoice",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/invoice/invoice_20240405.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"invoice",
+						"invoice_20240405.csv"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetByAccountId",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
