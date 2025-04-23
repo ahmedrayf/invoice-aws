@@ -8,6 +8,7 @@ import com.onboarding.entity.Invoice;
 import com.onboarding.handler.InvoiceProcessingException;
 import com.onboarding.handler.ResourceNotFoundException;
 import com.onboarding.mapper.InvoiceMapper;
+import com.onboarding.mapper.SQSMessageMapper;
 import com.onboarding.service.aws.S3Service;
 import com.onboarding.component.CSVParser;
 import com.onboarding.service.aws.SqsService;
@@ -30,6 +31,7 @@ public class InvoiceService {
     private final CSVParser csvParser;
     private final MongoService mongoService;
     private final InvoiceMapper invoiceMapper;
+    private final SQSMessageMapper sqsMessageMapper;
     private final SqsService sqsService;
 
 
@@ -104,7 +106,7 @@ public class InvoiceService {
     }
 
     private void sendMessages(List<InvoiceDTO> dtos, ProcessResult result) {
-        List<SQSMessage> messages = invoiceMapper.mapToSqs(dtos);
+        List<SQSMessage> messages = sqsMessageMapper.mapDtosToSqsMessages(dtos);
         messages.forEach(sqsService::sendInvoice);
         result.incrementSuccessCount(dtos.size());
     }

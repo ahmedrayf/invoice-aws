@@ -110,7 +110,7 @@ class InvoiceControllerIntegrationTest {
 		// Given
 		String accountId = "ACC001";
 		InvoiceDTO invoice = createTestInvoice(accountId);
-		invoiceRepository.save(invoiceMapper.toEntity(invoice));
+		invoiceRepository.save(invoiceMapper.mapDtoToEntity(invoice));
 
 		// When & Then
 		mockMvc.perform(

@@ -8,17 +8,16 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
 @Profile("!junit")
-public class AWSConfig {
+public class S3Config {
 
     AwsBasicCredentials basicCredentials;
     @Value("${aws.region}")
     private String region;
 
-    public AWSConfig(@Value("${aws.access.key}")
+    public S3Config(@Value("${aws.access.key}")
                      String accessKey,
                      @Value("${aws.access.secret-key}")
                      String secretKey
@@ -26,14 +25,6 @@ public class AWSConfig {
         this.basicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
     }
 
-
-    @Bean
-    SqsAsyncClient sqsAsyncClient() {
-        return SqsAsyncClient.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(basicCredentials))
-                .build();
-    }
 
     @Bean
     public S3Client s3Client() {

@@ -7,6 +7,7 @@ import com.onboarding.dto.SQSMessage;
 import com.onboarding.entity.Invoice;
 import com.onboarding.handler.InvoiceProcessingException;
 import com.onboarding.mapper.InvoiceMapper;
+import com.onboarding.mapper.SQSMessageMapper;
 import com.onboarding.service.aws.S3Service;
 import com.onboarding.service.aws.SqsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,8 @@ class InvoiceServiceTest {
     @Mock
     private InvoiceMapper invoiceMapper;
     @Mock
+    private SQSMessageMapper sqsMessageMapper;
+    @Mock
     private SqsService sqsService;
     @InjectMocks
     private InvoiceService invoiceService;
@@ -71,7 +74,7 @@ class InvoiceServiceTest {
 
         when(invoiceMapper.mapDtosToEntities(anyList()))
                 .thenReturn(List.of(new Invoice(), new Invoice()));
-        when(invoiceMapper.mapToSqs(anyList()))
+        when(sqsMessageMapper.mapDtosToSqsMessages(anyList()))
                 .thenReturn(List.of(new SQSMessage(), new SQSMessage()));
 
         // When

@@ -2,7 +2,7 @@ package com.onboarding.service;
 
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
-import com.onboarding.mapper.InvoiceMapper;
+import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import java.util.List;
 @Slf4j
 public class MongoService {
     private final InvoiceRepository invoiceRepo;
-    private final InvoiceMapper invoiceMapper;
+    private final InvoiceDTOMapper invoiceDTOMapper;
 
     public void saveAll(List<Invoice> invoices) {
         if (invoices == null || invoices.isEmpty())
@@ -32,7 +32,7 @@ public class MongoService {
         if (accountId == null)
             throw new IllegalArgumentException("AccountId is null");
         Page<Invoice> invoices = invoiceRepo.findByAccountId(accountId ,PageRequest.of(pageNumber,pageCount));
-        return invoiceMapper.mapToPageableDto(invoices);
+        return invoiceDTOMapper.mapToPageDto(invoices);
 
     }
 }

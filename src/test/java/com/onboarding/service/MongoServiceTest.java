@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
-import com.onboarding.mapper.InvoiceMapper;
+import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,8 @@ class MongoServiceTest {
     @Mock
     private InvoiceRepository invoiceRepo;
     @Mock
-    private InvoiceMapper invoiceMapper;
+    private InvoiceDTOMapper invoiceDTOMapper;
+
     @InjectMocks
     private MongoService mongoService;
     private static List<Invoice> testInvoices;
@@ -45,7 +46,7 @@ class MongoServiceTest {
         File file = ResourceUtils.getFile("src/test/resources/invoices/success/entity/invoices-entities.json");
         String content = Files.readString(file.toPath());
         ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        testInvoices = mapper.readValue(content, new TypeReference<List<Invoice>>() {});
+        testInvoices = mapper.readValue(content, new TypeReference<>() {});
     }
 
     @Test
@@ -87,7 +88,7 @@ class MongoServiceTest {
 
         when(invoiceRepo.findByAccountId(nonExistingAccount, DEFAULT_PAGE))
                 .thenReturn(emptyPage);
-        when(invoiceMapper.mapToPageableDto(emptyPage))
+        when(invoiceDTOMapper.mapToPageDto(emptyPage))
                 .thenReturn(new PageImpl<>(Collections.emptyList(), DEFAULT_PAGE, 0));
 
         // When
@@ -111,7 +112,7 @@ class MongoServiceTest {
 
         when(invoiceRepo.findByAccountId(testInvoice.getAccountId(), customPage))
                 .thenReturn(invoicePage);
-        when(invoiceMapper.mapToPageableDto(invoicePage))
+        when(invoiceDTOMapper.mapToPageDto(invoicePage))
                 .thenReturn(new PageImpl<>(List.of(expectedDto), customPage, 1));
 
         // When
