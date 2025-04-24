@@ -35,7 +35,7 @@ public class CSVParser {
                     .rawLine(csvLine)
                     .build();
         } catch (Exception e) {
-            log.error("Error Parsing Line {} : ex : {}",lineNumber, e.getMessage());
+            log.error("Error Parsing Line {} : {}",lineNumber, csvLine);
             throw new InvoiceProcessingException(
                     String.format("Line %d: %s", lineNumber, e.getMessage()), e);
         }
