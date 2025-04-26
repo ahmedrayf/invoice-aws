@@ -1,20 +1,20 @@
 package com.onboarding.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class ProcessResult {
     private final String filename;
-    private int successCount = 0;
+    private int successCount;
     private final Map<Integer, String> errors = new LinkedHashMap<>();
 
-    public ProcessResult(String filename) {
-        this.filename = filename;
-    }
+
 
     public void incrementSuccessCount(int count) {
         successCount+= count;

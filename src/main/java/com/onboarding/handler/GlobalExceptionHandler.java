@@ -1,6 +1,7 @@
 package com.onboarding.handler;
 
 import com.onboarding.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,20 +44,41 @@ public class GlobalExceptionHandler {
                 "Processing was interrupted");
     }
 
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<String>> handleConstraintViolationException(
             ConstraintViolationException ex) {
         log.error("ConstraintViolationException: {}", ex.getMessage(), ex);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST,
-                ex.getMessage());
+        String errorMessage = ex.getConstraintViolations()
+                .stream()
+                .map(ConstraintViolation::getMessage) //
+                .findFirst()
+                .orElse("Validation error");
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
     }
 
     @ExceptionHandler(ExecutionException.class)
-    public ResponseEntity<ApiResponse<String>> handleExecutionException(
-            ExecutionException ex) {
-        log.error("Async processing failed: {}", ex.getMessage(), ex);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Failed to process invoice: " + ex.getCause().getMessage());
+    public ResponseEntity<ApiResponse<String>> handleExecutionException(ExecutionException ex) {
+        Throwable rootCause = ex.getCause() != null ? ex.getCause() : ex;
+        String errorMsg;
+
+        if (rootCause instanceof InvoiceProcessingException)
+            errorMsg = rootCause.getMessage();
+        else
+            errorMsg = "Async processing failed: " + rootCause.getMessage();
+
+        log.error(errorMsg, rootCause);
+
+
+        HttpStatus status = rootCause instanceof ResourceNotFoundException
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.INTERNAL_SERVER_ERROR;
+        if (rootCause instanceof InvoiceProcessingException)
+            status = HttpStatus.BAD_REQUEST;
+
+
+        return buildErrorResponse(status, errorMsg);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

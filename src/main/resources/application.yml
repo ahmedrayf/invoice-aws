@@ -26,3 +26,6 @@ aws:
 processing:
   batch:
     size: 10
+
+invoice:
+  filename-pattern: "invoice_\\d{8}\\.csv"

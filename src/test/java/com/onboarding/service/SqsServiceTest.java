@@ -3,6 +3,7 @@ package com.onboarding.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onboarding.dto.SQSMessage;
+import com.onboarding.handler.InvoiceProcessingException;
 import com.onboarding.service.aws.SqsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -78,13 +80,13 @@ class SqsServiceTest {
         SQSMessage message = new SQSMessage("acc999", "2024-01-01", "2024-01-02", "bad data");
 
         when(objectMapper.writeValueAsString(message))
-                .thenThrow(new JsonProcessingException("JSON fail") {
-                });
+                .thenThrow(new JsonProcessingException("JSON fail") {});
 
-        // Act
-        sqsService.sendInvoice(message);
+        // Act & Assert
+        assertThrows(InvoiceProcessingException.class, () ->
+            sqsService.sendInvoice(message));
 
-        // Assert
+        // Verify
         verify(objectMapper).writeValueAsString(message);
         verifyNoInteractions(sqsAsyncClient);
     }

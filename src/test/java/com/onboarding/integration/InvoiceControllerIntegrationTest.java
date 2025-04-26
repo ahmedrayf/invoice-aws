@@ -114,9 +114,9 @@ class InvoiceControllerIntegrationTest {
 
 		// When & Then
 		mockMvc.perform(
-				get("/v1/invoice/findByAccountId/{accountId}", accountId).param("pageNum", "0").param("count", "10"))
-				.andExpect(status().isOk()).andExpect(jsonPath("$.message", is("Success")))
-				.andExpect(jsonPath("$.body[0].accountId", is(accountId))).andExpect(jsonPath("$.totalItems", is(1)));
+				get("/v1/invoice/{accountId}", accountId).param("pageNum", "0").param("count", "10"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].accountId", is(accountId))).andExpect(jsonPath("$.totalElements", is(1)));
 	}
 
 	@Test
@@ -125,8 +125,17 @@ class InvoiceControllerIntegrationTest {
 		String unknownAccountId = "UNKNOWN_ACC";
 
 		// When & Then
-		mockMvc.perform(get("/v1/invoice/findByAccountId/{accountId}", unknownAccountId).param("pageNum", "0")
-				.param("count", "10")).andExpect(status().isOk()).andExpect(jsonPath("$.message", is("Not Found")));
+		mockMvc.perform(get("/v1/invoice/{accountId}", unknownAccountId).param("pageNum", "0")
+				.param("count", "10")).andExpect(status().isOk()).andExpect(jsonPath("$.totalElements", is(0)));
+	}
+
+
+	@Test
+	void getInvoicesByAccountId_shouldRejectEmptyAccountID() throws Exception {
+
+		mockMvc.perform(get("/v1/invoice/ ").contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message", containsString("Field must not be null or blank")));
 	}
 
 	@Test
@@ -136,7 +145,7 @@ class InvoiceControllerIntegrationTest {
 
 		// When & Then
 		mockMvc.perform(post("/v1/invoice/{invoiceName}", nonExistentFile).contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNotFound()).andExpect(jsonPath("$.message", containsString("Not found")));
+				.andExpect(status().isNotFound());
 	}
 
 	@Test
@@ -147,8 +156,9 @@ class InvoiceControllerIntegrationTest {
 		// When & Then
 		mockMvc.perform(post("/v1/invoice/{invoiceName}", invalidFilename).contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message", containsString("Invalid file name format")));
+				.andExpect(jsonPath("$.message", containsString("Invalid invoice name format")));
 	}
+
 
 	private InvoiceDTO createTestInvoice(String accountId) {
 		return InvoiceDTO.builder().billId("BILL-" + System.currentTimeMillis()).accountId(accountId)

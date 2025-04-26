@@ -60,27 +60,6 @@ class MongoServiceTest {
     }
 
     @Test
-    void saveAll_WithNullList_ShouldThrowException() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> mongoService.saveAll(null)
-        );
-        assertEquals("Invoices is null or empty", exception.getMessage());
-        verifyNoInteractions(invoiceRepo);
-    }
-
-    @Test
-    void saveAll_WithEmptyList_ShouldThrowException() {
-        List<Invoice> emptyList = Collections.emptyList();
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> mongoService.saveAll(emptyList)
-        );
-        assertEquals("Invoices is null or empty", exception.getMessage());
-        verifyNoInteractions(invoiceRepo);
-    }
-
-    @Test
     void getByAccountId_WithNonExistingAccount_ShouldReturnEmptyPage() {
         // Given
         String nonExistingAccount = "0000000000";
@@ -92,7 +71,7 @@ class MongoServiceTest {
                 .thenReturn(new PageImpl<>(Collections.emptyList(), DEFAULT_PAGE, 0));
 
         // When
-        Page<InvoiceDTO> result = mongoService.getByAccountId(nonExistingAccount, 0, 10);
+        Page<InvoiceDTO> result = mongoService.getInvoicesByAccountId(nonExistingAccount, 0, 10);
 
         // Then
         assertNotNull(result);
@@ -116,7 +95,7 @@ class MongoServiceTest {
                 .thenReturn(new PageImpl<>(List.of(expectedDto), customPage, 1));
 
         // When
-        Page<InvoiceDTO> result = mongoService.getByAccountId(
+        Page<InvoiceDTO> result = mongoService.getInvoicesByAccountId(
                 testInvoice.getAccountId(), pageNumber, pageSize
         );
 

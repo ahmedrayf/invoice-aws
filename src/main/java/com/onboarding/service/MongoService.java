@@ -1,11 +1,14 @@
 package com.onboarding.service;
 
+import com.mongodb.MongoException;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
+import com.onboarding.handler.InvoiceProcessingException;
 import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -19,18 +22,23 @@ public class MongoService {
     private final InvoiceRepository invoiceRepo;
     private final InvoiceDTOMapper invoiceDTOMapper;
 
-    public void saveAll(List<Invoice> invoices) {
-        if (invoices == null || invoices.isEmpty())
-            throw new IllegalArgumentException("Invoices is null or empty");
 
+    public void saveAll(List<Invoice> invoices) {
         log.info("Adding invoices to Mongo");
-        invoiceRepo.saveAll(invoices);
+        try {
+            invoiceRepo.saveAll(invoices);
+        } catch (DuplicateKeyException e) {
+            log.error( "Duplicate bill ID found: ex:{}" , e.getMessage());
+            throw new InvoiceProcessingException("Duplicate bill ID found", e);
+        } catch (MongoException e) {
+            String errorMsg = "Failed to save invoices to MongoDB: " + e.getMessage();
+            log.error(errorMsg);
+            throw new InvoiceProcessingException(errorMsg, e);
+        }
     }
 
-    public Page<InvoiceDTO> getByAccountId(String accountId ,int pageNumber ,int pageCount)
+    public Page<InvoiceDTO> getInvoicesByAccountId(String accountId , int pageNumber , int pageCount)
     {
-        if (accountId == null)
-            throw new IllegalArgumentException("AccountId is null");
         Page<Invoice> invoices = invoiceRepo.findByAccountId(accountId ,PageRequest.of(pageNumber,pageCount));
         return invoiceDTOMapper.mapToPageDto(invoices);
 

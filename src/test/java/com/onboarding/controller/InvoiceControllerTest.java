@@ -3,9 +3,7 @@ package com.onboarding.controller;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.response.ApiResponse;
-import com.onboarding.dto.response.PageableResponse;
 import com.onboarding.service.InvoiceService;
-import com.onboarding.service.MongoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,20 +34,16 @@ import static org.mockito.Mockito.when;
 class InvoiceControllerTest {
 
 	@Mock
-	private MongoService mongoService;
-
-	@Mock
 	private InvoiceService invoiceService;
 
 	@InjectMocks
 	private InvoiceController invoiceController;
 
-	private InvoiceDTO sampleInvoice;
 	private Page<InvoiceDTO> invoicePage;
 
 	@BeforeEach
 	void setUp() {
-		sampleInvoice = InvoiceDTO.builder().billId("BILL001").accountId("ACC001").issueDate(LocalDate.now())
+		InvoiceDTO sampleInvoice = InvoiceDTO.builder().billId("BILL001").accountId("ACC001").issueDate(LocalDate.now())
 				.billPeriodFrom(LocalDate.now().minusDays(30)).billPeriodTo(LocalDate.now()).name("Test Invoice")
 				.grossAmount(new BigDecimal("100.00")).netAmount(new BigDecimal("80.00"))
 				.taxAmount(new BigDecimal("20.00")).rawLine("raw line data").build();
@@ -61,52 +55,45 @@ class InvoiceControllerTest {
 	@Test
 	void getInvoicesByAccountId_shouldReturnPageableResponse() {
 		// Arrange
-		when(mongoService.getByAccountId(anyString(), anyInt(), anyInt())).thenReturn(invoicePage);
+		when(invoiceService.getInvoicesByAccountId(anyString(), anyInt(), anyInt())).thenReturn(invoicePage);
 
 		// Act
-		ResponseEntity<PageableResponse<List<InvoiceDTO>>> response = invoiceController.getInvoicesByAccountId("ACC001",
+		ResponseEntity<Page<InvoiceDTO>> response = invoiceController.getInvoicesByAccountId("ACC001",
 				0, 10);
 
 		// Assert
 		assertNotNull(response);
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 
-		PageableResponse<List<InvoiceDTO>> body = response.getBody();
+		Page<InvoiceDTO> body = response.getBody();
 		assertNotNull(body);
-		assertEquals("Success", body.getMessage());
-		assertEquals(1, body.getBody().size());
-		assertEquals(sampleInvoice, body.getBody().get(0));
-		assertEquals(0, body.getCurrentPage());
-		assertEquals(1, body.getTotalItems());
 		assertEquals(1, body.getTotalPages());
-		assertEquals(1, body.getCurrentItems());
 	}
 
 	@Test
-	void getInvoicesByAccountId_shouldReturnNotFoundWhenEmpty() {
+	void getInvoicesByAccountId_shouldReturnEmpty() {
 		// Arrange
 		Page<InvoiceDTO> emptyPage = new PageImpl<>(Collections.emptyList());
-		when(mongoService.getByAccountId(anyString(), anyInt(), anyInt())).thenReturn(emptyPage);
+		when(invoiceService.getInvoicesByAccountId(anyString(), anyInt(), anyInt())).thenReturn(emptyPage);
 
 		// Act
-		ResponseEntity<PageableResponse<List<InvoiceDTO>>> response = invoiceController
+		ResponseEntity<Page<InvoiceDTO>> response = invoiceController
 				.getInvoicesByAccountId("NON_EXISTENT", 0, 10);
 
 		// Assert
 		assertNotNull(response);
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 
-		PageableResponse<List<InvoiceDTO>> body = response.getBody();
+		Page<InvoiceDTO> body = response.getBody();
 		assertNotNull(body);
-		assertEquals("Not Found", body.getMessage());
-		assertTrue(body.getBody().isEmpty());
+		assertTrue(body.isEmpty());
 	}
 
 	@Test
-	void processInvoiceFile_shouldProcessSuccessfully() throws ExecutionException{
+	void processInvoiceFile_shouldProcessSuccessfully() throws ExecutionException, InterruptedException {
 		// Arrange
 		String filename = "invoice_20250301.csv";
-		ProcessResult processResult = new ProcessResult(filename);
+		ProcessResult processResult = ProcessResult.builder().filename(filename).build();
 		processResult.incrementSuccessCount(10);
 
 		when(invoiceService.processFileAsync(filename))
@@ -128,10 +115,10 @@ class InvoiceControllerTest {
 
 	@Test
 	void processInvoiceFile_shouldIncludeErrorsWhenPresent()
-			throws ExecutionException {
+            throws ExecutionException, InterruptedException {
 		// Arrange
 		String filename = "invoice_20250301.csv";
-		ProcessResult processResult = new ProcessResult(filename);
+		ProcessResult processResult = ProcessResult.builder().filename(filename).build();
 		processResult.incrementSuccessCount(8);
 		processResult.addError(3, "Invalid amount");
 		processResult.addError(7, "Missing field");

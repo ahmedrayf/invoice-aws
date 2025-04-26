@@ -13,4 +13,5 @@ public interface InvoiceRepository extends MongoRepository<Invoice , String > {
 
     @Cacheable(value = "accountInvoices", key = "#accountId + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     Page<Invoice> findByAccountId(String accountId , Pageable pageable);
+
 }

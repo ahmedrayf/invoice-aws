@@ -101,6 +101,12 @@ class InvoiceServiceTest {
         when(csvParser.parseLine(lines.get(1), 2))
                 .thenThrow(new InvoiceProcessingException("Invalid format"));
 
+        when(invoiceMapper.mapDtosToEntities(anyList()))
+                .thenReturn(List.of(new Invoice()));
+        when(sqsMessageMapper.mapDtosToSqsMessages(anyList()))
+                .thenReturn(List.of(new SQSMessage()));
+
+        doNothing().when(mongoService).saveAll(anyList());
         // When
         CompletableFuture<ProcessResult> future = invoiceService.processFileAsync(TEST_FILE_NAME);
         ProcessResult result = future.get();
@@ -156,12 +162,6 @@ class InvoiceServiceTest {
         assertEquals(0, result.getErrors().size());
     }
 
-    @Test
-    void shouldRejectNonCsvFiles() throws Exception {
-        ProcessResult result = invoiceService.processFileAsync("invoice.pdf").get();
-        assertEquals(0, result.getSuccessCount());
-        assertTrue(result.getErrors().get(0).contains(".csv files are allowed"));
-    }
 
 
 }
