@@ -27,10 +27,13 @@ aws:
     mock:
       port: 9096
   sqs:
-    name: invoices
     queue:
       url: "http://localhost:5235/invoices"
 
 processing:
   batch:
     size: 10
+
+cache:
+  TTL: 30
+  max-size: 1000

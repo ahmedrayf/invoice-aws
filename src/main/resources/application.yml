@@ -29,3 +29,8 @@ processing:
 
 invoice:
   filename-pattern: "invoice_\\d{8}\\.csv"
+
+cache:
+  TTL: 30
+  max-size: 1000
+
