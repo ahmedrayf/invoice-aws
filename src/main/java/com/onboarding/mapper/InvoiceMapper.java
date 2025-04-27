@@ -13,7 +13,6 @@ import java.util.List;
 public interface InvoiceMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "name", source = "name")
     Invoice mapDtoToEntity(InvoiceDTO dto);
 
     default List<Invoice> mapDtosToEntities(List<InvoiceDTO> dtos) {

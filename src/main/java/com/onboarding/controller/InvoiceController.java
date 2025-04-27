@@ -32,7 +32,7 @@ public class InvoiceController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
             Page<InvoiceDTO> result = invoiceService.getInvoicesByAccountId(accountId, pageNum, pageSize);
-            return new ResponseEntity<>(result , HttpStatus.OK);
+            return ResponseEntity.ok(result);
 
     }
 
