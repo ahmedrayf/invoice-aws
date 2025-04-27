@@ -3,8 +3,8 @@ package com.onboarding.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onboarding.dto.SQSMessage;
-import com.onboarding.handler.InvoiceProcessingException;
 import com.onboarding.service.aws.SqsService;
+import exception.MessageProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,7 +83,7 @@ class SqsServiceTest {
                 .thenThrow(new JsonProcessingException("JSON fail") {});
 
         // Act & Assert
-        assertThrows(InvoiceProcessingException.class, () ->
+        assertThrows(MessageProcessingException.class, () ->
             sqsService.sendInvoice(message));
 
         // Verify

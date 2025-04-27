@@ -1,11 +1,13 @@
 package com.onboarding.service;
 
+import com.mongodb.MongoException;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.SQSMessage;
 import com.onboarding.entity.Invoice;
-import com.onboarding.handler.InvoiceProcessingException;
-import com.onboarding.handler.ResourceNotFoundException;
+import exception.InvoiceProcessingException;
+import exception.MessageProcessingException;
+import exception.ResourceNotFoundException;
 import com.onboarding.mapper.InvoiceMapper;
 import com.onboarding.mapper.SQSMessageMapper;
 import com.onboarding.service.aws.S3Service;
@@ -38,12 +40,12 @@ public class InvoiceService {
     @Value("${processing.batch.size}")
     private int batchSize;
 
-    public Page<InvoiceDTO> getInvoicesByAccountId(String accountId , int pageNumber , int pageCount){
+    public Page<InvoiceDTO> getInvoicesByAccountId(String accountId, int pageNumber, int pageCount) {
         return mongoService.getInvoicesByAccountId(accountId, pageNumber, pageCount);
     }
 
     @Async
-    public CompletableFuture<ProcessResult> processFileAsync(String invoiceName)  {
+    public CompletableFuture<ProcessResult> processFileAsync(String invoiceName) {
 
         ProcessResult result = ProcessResult.builder().filename(invoiceName).build();
         log.info("Processing invoice {}", invoiceName);
@@ -68,8 +70,7 @@ public class InvoiceService {
                 sendMessages(batch, result);
             }
 
-        }
-        catch (ResourceNotFoundException e) {
+        } catch (ResourceNotFoundException e) {
             log.error("File not found in S3: {}", invoiceName, e);
             throw new ResourceNotFoundException("File not found in S3: " + invoiceName, e);
         } catch (IOException e) {
@@ -101,10 +102,10 @@ public class InvoiceService {
             log.error("Batch save failed: {}", errorMsg, e);
             result.addError(0, errorMsg);
             throw e;
-        } catch (Exception e) {
+        } catch (MongoException e) {
             log.error("Unexpected error during batch save", e);
             result.addError(0, "Unexpected error during batch processing");
-            throw new InvoiceProcessingException("Failed to process batch", e);
+            throw e;
         }
     }
 
@@ -114,12 +115,12 @@ public class InvoiceService {
             try {
                 sqsService.sendInvoice(message);
                 result.incrementSuccessCount(1);
-            } catch (InvoiceProcessingException e) {
+            } catch (MessageProcessingException e) {
                 result.addError(0, "Failed to send message to SQS for message: " + message.getContent());
                 throw e;
             }
         }
-    }
 
+    }
 }
 

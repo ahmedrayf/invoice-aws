@@ -1,6 +1,6 @@
 package com.onboarding.service;
 
-import com.onboarding.handler.ResourceNotFoundException;
+import exception.ResourceNotFoundException;
 import com.onboarding.service.aws.S3Service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

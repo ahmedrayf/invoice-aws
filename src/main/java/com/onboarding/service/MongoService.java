@@ -3,7 +3,7 @@ package com.onboarding.service;
 import com.mongodb.MongoException;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
-import com.onboarding.handler.InvoiceProcessingException;
+import exception.InvoiceProcessingException;
 import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class MongoService {
         } catch (MongoException e) {
             String errorMsg = "Failed to save invoices to MongoDB: " + e.getMessage();
             log.error(errorMsg);
-            throw new InvoiceProcessingException(errorMsg, e);
+            throw new MongoException(errorMsg, e);
         }
     }
 

@@ -1,7 +1,7 @@
 package com.onboarding.component;
 
 import com.onboarding.dto.InvoiceDTO;
-import com.onboarding.handler.InvoiceProcessingException;
+import exception.InvoiceProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;

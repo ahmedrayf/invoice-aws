@@ -5,7 +5,7 @@ import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.dto.ProcessResult;
 import com.onboarding.dto.SQSMessage;
 import com.onboarding.entity.Invoice;
-import com.onboarding.handler.InvoiceProcessingException;
+import exception.InvoiceProcessingException;
 import com.onboarding.mapper.InvoiceMapper;
 import com.onboarding.mapper.SQSMessageMapper;
 import com.onboarding.service.aws.S3Service;

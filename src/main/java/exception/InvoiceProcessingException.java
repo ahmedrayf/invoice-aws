@@ -1,4 +1,4 @@
-package com.onboarding.handler;
+package exception;
 
 public class InvoiceProcessingException extends RuntimeException {
     public InvoiceProcessingException(String message) {

@@ -3,7 +3,8 @@ package com.onboarding.service.aws;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onboarding.dto.SQSMessage;
-import com.onboarding.handler.InvoiceProcessingException;
+import exception.InvoiceProcessingException;
+import exception.MessageProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,10 +39,10 @@ public class SqsService {
                     });
         } catch (JsonProcessingException e) {
             log.error("Error parsing invoice: {}", message, e);
-            throw new InvoiceProcessingException("Failed to serialize message", e);
-        } catch (SqsException e) {
-            log.error("Failed to send invoice to SQS : Message: {}", message, e);
-            throw new InvoiceProcessingException("Failed to send message after retries", e);
+            throw new MessageProcessingException("Failed to serialize message", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending message onSQS : Message: {}", message, e);
+            throw new MessageProcessingException("Unexpected error while sending message onSQS", e);
         }
     }
 

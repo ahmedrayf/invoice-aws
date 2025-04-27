@@ -1,6 +1,9 @@
 package com.onboarding.handler;
 
 import com.onboarding.dto.response.ApiResponse;
+import exception.InvoiceProcessingException;
+import exception.MessageProcessingException;
+import exception.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,13 @@ public class GlobalExceptionHandler {
             InvoiceProcessingException ex) {
         log.error("Invoice processing failed: {}", ex.getMessage(), ex);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(MessageProcessingException.class)
+    public ResponseEntity<ApiResponse<String>> handleMessageProcessingException(
+            MessageProcessingException ex) {
+        log.error("Error when sending message to sqs: {}", ex.getMessage(), ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -66,7 +76,7 @@ public class GlobalExceptionHandler {
         if (rootCause instanceof InvoiceProcessingException)
             errorMsg = rootCause.getMessage();
         else
-            errorMsg = "Async processing failed: " + rootCause.getMessage();
+            errorMsg = "An unexpected error occurred.";
 
         log.error(errorMsg, rootCause);
 
