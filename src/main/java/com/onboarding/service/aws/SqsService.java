@@ -3,7 +3,6 @@ package com.onboarding.service.aws;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onboarding.dto.SQSMessage;
-import exception.InvoiceProcessingException;
 import exception.MessageProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,12 +34,12 @@ public class SqsService {
                     .thenAccept(res -> log.info("Message sent successfully. MessageId: {}", res.messageId()))
                     .exceptionally(ex -> {
                         log.error("Failed to send SQS message asynchronously: message: {}",message, ex);
-                        throw new InvoiceProcessingException("Failed to send SQS message", ex);
+                        throw new MessageProcessingException("Failed to send SQS message", ex);
                     });
         } catch (JsonProcessingException e) {
             log.error("Error parsing invoice: {}", message, e);
             throw new MessageProcessingException("Failed to serialize message", e);
-        } catch (Exception e) {
+        } catch (SqsException e) {
             log.error("Unexpected error while sending message onSQS : Message: {}", message, e);
             throw new MessageProcessingException("Unexpected error while sending message onSQS", e);
         }

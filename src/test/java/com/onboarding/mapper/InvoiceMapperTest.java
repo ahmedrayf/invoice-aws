@@ -85,4 +85,11 @@ class InvoiceMapperTest {
         assertNotNull(entities.get(0).getCreatedAt());
         assertNotNull(entities.get(1).getCreatedAt());
     }
+
+    @Test
+    void mapEntities_shouldHandleNullInput(){
+        assertNull(invoiceMapper.mapDtoToEntity(null),"Expected result to be null when input invoiceDTO is null");
+        assertNull(invoiceMapper.mapDtosToEntities(null),"Expected result to be null when input invoiceDTOs is null");
+
+    }
 }

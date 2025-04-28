@@ -69,4 +69,11 @@ class SQSMessageMapperTest {
         assertThat(LocalDate.of(2024, 6, 15)).isEqualTo(messages.get(1).getIssueDate());
 
     }
+    @Test
+    void toSqsMessages_shouldHandleNullInput(){
+        assertNull(sqsMessageMapper.mapDtoToSqsMessage(null),"Expected result to be null when input invoiceDto is null");
+        assertNull(sqsMessageMapper.mapDtosToSqsMessages(null),"Expected result to be null when input invoiceDtoS is null");
+
+    }
+
 }

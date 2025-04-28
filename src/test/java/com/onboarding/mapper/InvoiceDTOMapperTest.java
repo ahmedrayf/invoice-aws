@@ -89,4 +89,9 @@ class InvoiceDTOMapperTest {
         assertEquals("Invoice 2", result.getContent().get(1).getName());
         assertEquals(new BigDecimal("75.00"), result.getContent().get(1).getGrossAmount());
     }
+    @Test
+    void  mapToDto_shouldHandleNullEntity(){
+        assertNull(invoiceDTOMapper.mapEntityToDto(null),"Expected result to be null when input invoice is null");
+    }
+
 }

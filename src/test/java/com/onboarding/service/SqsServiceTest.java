@@ -15,8 +15,10 @@ import org.springframework.test.context.ActiveProfiles;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
+import software.amazon.awssdk.services.sqs.model.SqsException;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,32 +40,35 @@ class SqsServiceTest {
     @InjectMocks
     private SqsService sqsService;
 
+    private SQSMessage sampleSqsMessage;
 
     @BeforeEach
     void setUp() throws Exception {
         Field field = SqsService.class.getDeclaredField("queueUrl");
         field.setAccessible(true);
         field.set(sqsService, "mockQueueUrl");
+
+        sampleSqsMessage = SQSMessage.builder()
+                .accountId("acc123")
+                .issueDate(LocalDate.of(2024, 1, 1))
+                .publishDate(LocalDate.of(2024, 1 , 2))
+                .content("Invoice data")
+                .build();
     }
+
 
     @Test
     void sendInvoice_shouldSendMessageSuccessfully() throws Exception {
         // Arrange
-        SQSMessage message = SQSMessage.builder()
-                .accountId("acc123")
-                .issueDate("2024-01-01")
-                .publishDate("2024-01-02")
-                .content("Invoice data")
-                .build();
 
         String serialized = "{\"accountId\":\"acc123\",\"issueDate\":\"2024-01-01\",\"publishDate\":\"2024-01-02\",\"content\":\"Invoice data\"}";
 
-        when(objectMapper.writeValueAsString(message)).thenReturn(serialized);
+        when(objectMapper.writeValueAsString(sampleSqsMessage)).thenReturn(serialized);
         CompletableFuture<SendMessageResponse> future = new CompletableFuture<>();
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(future);
 
         // Act
-        sqsService.sendInvoice(message);
+        sqsService.sendInvoice(sampleSqsMessage);
 
         // Assert
         SendMessageResponse mockResponse = SendMessageResponse.builder().messageId("test-message-id-999").build();
@@ -76,18 +81,28 @@ class SqsServiceTest {
 
     @Test
     void sendInvoice_shouldHandleJsonProcessingException() throws Exception {
-        // Arrange
-        SQSMessage message = new SQSMessage("acc999", "2024-01-01", "2024-01-02", "bad data");
-
-        when(objectMapper.writeValueAsString(message))
+        when(objectMapper.writeValueAsString(sampleSqsMessage))
                 .thenThrow(new JsonProcessingException("JSON fail") {});
 
         // Act & Assert
         assertThrows(MessageProcessingException.class, () ->
-            sqsService.sendInvoice(message));
+            sqsService.sendInvoice(sampleSqsMessage));
 
         // Verify
-        verify(objectMapper).writeValueAsString(message);
+        verify(objectMapper).writeValueAsString(sampleSqsMessage);
         verifyNoInteractions(sqsAsyncClient);
     }
+
+    @Test
+    void sendInvoice_shouldHandleSQSException() throws Exception {
+        // When
+        when(objectMapper.writeValueAsString(any()))
+                .thenReturn("serialized");
+        when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenThrow(SqsException.class);
+
+        // Act & Assert
+        assertThrows(MessageProcessingException.class, () ->
+                sqsService.sendInvoice(sampleSqsMessage));
+    }
+
 }

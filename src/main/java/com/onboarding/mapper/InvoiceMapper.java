@@ -5,7 +5,6 @@ import com.onboarding.entity.Invoice;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -13,20 +12,8 @@ import java.util.List;
 public interface InvoiceMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     Invoice mapDtoToEntity(InvoiceDTO dto);
 
-    default List<Invoice> mapDtosToEntities(List<InvoiceDTO> dtos) {
-        return dtos.stream()
-                .map(dto -> {
-                    Invoice entity = mapDtoToEntity(dto);
-                    entity.setCreatedAt(LocalDateTime.now());
-                    return entity;
-                })
-                .toList();
-    }
-
-
-
-//
-
+     List<Invoice> mapDtosToEntities(List<InvoiceDTO> dtos);
 }
