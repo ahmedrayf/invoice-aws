@@ -1,4 +1,4 @@
-package exception;
+package com.onboarding.exception;
 
 public class MessageProcessingException extends RuntimeException {
     public MessageProcessingException(String message) {

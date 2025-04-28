@@ -1,7 +1,7 @@
 package com.onboarding.component;
 
 import com.onboarding.dto.InvoiceDTO;
-import exception.InvoiceProcessingException;
+import com.onboarding.exception.InvoiceProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

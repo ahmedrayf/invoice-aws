@@ -8,7 +8,7 @@ import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
 import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
-import exception.InvoiceProcessingException;
+import com.onboarding.exception.InvoiceProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

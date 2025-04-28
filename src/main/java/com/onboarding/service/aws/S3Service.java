@@ -1,6 +1,6 @@
 package com.onboarding.service.aws;
 
-import exception.ResourceNotFoundException;
+import com.onboarding.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

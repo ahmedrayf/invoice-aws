@@ -3,7 +3,7 @@ package com.onboarding.service.aws;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onboarding.dto.SQSMessage;
-import exception.MessageProcessingException;
+import com.onboarding.exception.MessageProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

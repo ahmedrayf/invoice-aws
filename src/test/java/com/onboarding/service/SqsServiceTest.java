@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onboarding.dto.SQSMessage;
 import com.onboarding.service.aws.SqsService;
-import exception.MessageProcessingException;
+import com.onboarding.exception.MessageProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

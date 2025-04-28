@@ -1,9 +1,9 @@
 package com.onboarding.handler;
 
 import com.onboarding.dto.response.ApiResponse;
-import exception.InvoiceProcessingException;
-import exception.MessageProcessingException;
-import exception.ResourceNotFoundException;
+import com.onboarding.exception.InvoiceProcessingException;
+import com.onboarding.exception.MessageProcessingException;
+import com.onboarding.exception.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -70,10 +70,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ExecutionException.class)
     public ResponseEntity<ApiResponse<String>> handleExecutionException(ExecutionException ex) {
-        Throwable rootCause = ex.getCause() != null ? ex.getCause() : ex;
+        Throwable rootCause = ex.getCause();
         String errorMsg;
 
-        if (rootCause instanceof InvoiceProcessingException)
+        if (rootCause instanceof InvoiceProcessingException || rootCause instanceof ResourceNotFoundException)
             errorMsg = rootCause.getMessage();
         else
             errorMsg = "An unexpected error occurred.";
@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationException(
+    public ResponseEntity<ApiResponse<String>> handleValidationException(
             MethodArgumentNotValidException ex) {
         Map<String, String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
@@ -104,7 +104,7 @@ public class GlobalExceptionHandler {
 
         log.warn("Validation errors: {}", errors);
         return ResponseEntity.badRequest()
-                .body(ApiResponse.<Void>builder()
+                .body(ApiResponse.<String>builder()
                         .httpStatus(HttpStatus.BAD_REQUEST)
                         .message("Validation failed")
                         .errors(errors)
@@ -119,7 +119,7 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred");
     }
 
-    private ResponseEntity<ApiResponse<String>> buildErrorResponse(
+    ResponseEntity<ApiResponse<String>> buildErrorResponse(
             HttpStatus status, String message) {
         return ResponseEntity.status(status)
                 .body(ApiResponse.<String>builder()

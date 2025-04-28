@@ -3,7 +3,7 @@ package com.onboarding.service;
 import com.mongodb.MongoException;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
-import exception.InvoiceProcessingException;
+import com.onboarding.exception.InvoiceProcessingException;
 import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
