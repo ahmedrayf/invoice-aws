@@ -136,7 +136,7 @@
                         <exclude>**/*Application.class</exclude>
                         <exclude>**/entity/**</exclude>
                         <exclude>**/dto/**</exclude>
-                        <exclude>**/bs/config/**</exclude>
+                        <exclude>**/config/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>

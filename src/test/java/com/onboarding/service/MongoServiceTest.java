@@ -3,16 +3,19 @@ package com.onboarding.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.mongodb.MongoException;
 import com.onboarding.dto.InvoiceDTO;
 import com.onboarding.entity.Invoice;
 import com.onboarding.mapper.InvoiceDTOMapper;
 import com.onboarding.repo.InvoiceRepository;
+import exception.InvoiceProcessingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -57,6 +60,25 @@ class MongoServiceTest {
         // Then
         verify(invoiceRepo, times(1)).saveAll(testInvoices);
         verifyNoMoreInteractions(invoiceRepo);
+    }
+    @Test
+    void saveAll_ShouldHandleDuplicatedInvoices() {
+        // When
+        when(invoiceRepo.saveAll(testInvoices)).thenThrow(DuplicateKeyException.class);
+
+        // Then
+        RuntimeException ex = assertThrows(InvoiceProcessingException.class, () -> mongoService.saveAll(testInvoices));
+        assertTrue(ex.getMessage().contains("Duplicate bill ID found"), "Exception message should contain 'Failed to save'");
+    }
+
+    @Test
+    void saveAll_ShouldHandleMongoExceptions() {
+        // When
+        when(invoiceRepo.saveAll(testInvoices)).thenThrow(MongoException.class);
+
+        // Then
+        RuntimeException ex = assertThrows(MongoException.class, () -> mongoService.saveAll(testInvoices));
+        assertTrue(ex.getMessage().contains("Failed to save invoices to MongoDB"), "Exception message should contain 'Failed to save'");
     }
 
     @Test
