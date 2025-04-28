@@ -25,7 +25,7 @@ aws:
 
 processing:
   batch:
-    size: 10
+    size: 30
 
 invoice:
   filename-pattern: "invoice_\\d{8}\\.csv"
@@ -33,4 +33,13 @@ invoice:
 cache:
   TTL: 30
   max-size: 1000
+
+async:
+  invoice:
+    name: InvoiceAsync
+    core-pool-size: 2
+    max-pool-size: 2
+    queue-capacity: 100
+
+
 
