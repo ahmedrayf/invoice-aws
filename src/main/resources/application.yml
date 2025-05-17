@@ -15,8 +15,8 @@ logging:
 aws:
   region: us-east-1
   access:
-    key: AKIATQPD64PLUGLK7H7B
-    secret-key: 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
+    key: access-key
+    secret-key: secret-key
   s3:
     bucket-name: rayef-invoices
   sqs:
