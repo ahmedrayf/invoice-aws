@@ -1,6 +1,6 @@
 # Invoice AWS
 
- A Spring Boot application that reads invoice files from **AWS S3**, parses and stores them in **MongoDB**, and sends notifications via **AWS SQS**. It also supports retrieving invoices by `accountId`.
+> A Spring Boot application that reads invoice files from **AWS S3**, parses and stores them in **MongoDB**, and sends notifications via **AWS SQS**. It also supports retrieving invoices by `accountId`.
 
 
 ---
