@@ -18,10 +18,10 @@ aws:
     key: access-key
     secret-key: secret-key
   s3:
-    bucket-name: rayef-invoices
+    bucket-name: bucket-name
   sqs:
     queue:
-      url: "https://sqs.us-east-1.amazonaws.com/241533117399/invoices"
+      url: sqs-url
 
 processing:
   batch:
